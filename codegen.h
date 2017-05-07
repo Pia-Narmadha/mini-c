@@ -21,7 +21,7 @@ enum nodeTypes {
   };
 struct registerArray
 {
-  int sp; // set it as 1 if the varable is global else set it to the value of the stack pointer
+  int sp; // set it as 0 if the variable is global else set it to 1
   char* var_name;
 }reg[20];
 void emit(char* opcode,int r1,int r2,int r3,int offset);//it creates the .asm file and opens it
@@ -33,7 +33,7 @@ void functionDecl(node *n);
 void functionCall(node *n);
 void codegen(node *n);//this the main codegen function that calls other function to build the .asm code
 void printAsm();
-int registerAlloc();
+int registerAlloc(char *var,int scope);
 int memorySpill();
 int findRegister(char * var_name)
 /*

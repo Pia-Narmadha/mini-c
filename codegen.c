@@ -78,13 +78,15 @@ void printAsm()
  
     fclose(fp);
 }
-int registrAlloc()// return the next available register
+int registrAlloc(char *var,int scope)// return the next available register
 {
     int x = 0;
     while(x < 20)
     {
         if(reg[x].var_name == NULL)
         {
+            strcpy(reg[x].var_name,var);
+            reg[x].sp=scope;
             return x;
         }
     }
