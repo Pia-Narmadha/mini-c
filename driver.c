@@ -32,7 +32,7 @@ int main() {
       print_ST(ST);
       codegen(ast);
       printf("\nAssemble code is genereted");
-      printAsm();
+      //printAsm();
     }
     printf("\n");
   }

@@ -3,8 +3,8 @@
   #include <tree.h>
   #include <semchk.h>
   #include <stdio.h>
-  #include <Debug.h>
   #include<string.h>
+  #include<Debug.h>
 
 
   int yylex();
@@ -208,7 +208,7 @@ typeSpecifier   : KWD_INT
                 ;
 funDecl         : typeSpecifier ID LPAREN formalDeclList RPAREN funBody 
                   { 
-                    int index;
+                      int index;
                       ++scope;
                       tree *funDecl = maketree(FUNDECL);
                       addChild(funDecl, $1);

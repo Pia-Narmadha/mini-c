@@ -3,8 +3,8 @@ GRAMMAR = parser.y
 CFLAGS = -I. -funsigned-char -g -DYYDEBUG 	
 YFLAGS = -v -d
 
-mcc: y.tab.o lex.yy.o symtab.o tree.o driver.o semchk.o
-	gcc $(CFLAGS) -o mcc y.tab.o lex.yy.o tree.o driver.o symtab.o semchk.o -ll
+mcc: y.tab.o lex.yy.o symtab.o tree.o driver.o semchk.o codegen.o
+	gcc $(CFLAGS) -o mcc y.tab.o lex.yy.o tree.o driver.o symtab.o semchk.o codegen.o -ll
 
 y.tab.o: y.tab.c y.tab.h 
 	gcc $(CFLAGS) -c y.tab.c 
@@ -23,6 +23,9 @@ tree.o: tree.c tree.h
 
 symtab.o: symtab.c symtab.h
 	gcc $(CFLAGS) -c symtab.c
+
+codegen.o: codegen.c codegen.h 
+	$gcc  $(CFLAGS) -c codegen.c codegen.h
 
 driver.o: driver.c 
 	$(CC)  $(CFLAGS) -c driver.c 

@@ -2,7 +2,6 @@
 #define CODEGEN_H
 
 typedef struct treenode node; 
-extern FILE *fp;
 enum nodeTypes {
     PROGRAM, DECLLIST, DECL, VARDECL, 
     TYPESPEC,  
@@ -35,7 +34,7 @@ void codegen(node *n);//this the main codegen function that calls other function
 void printAsm();
 int registerAlloc(char *var,int scope);
 int memorySpill();
-int findRegister(char * var_name)
+int findRegister(char * var_name);
 /*
 returns the register number if the variable is in the register else returns -1;
 var_name is the name of the varable 
