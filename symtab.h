@@ -47,4 +47,6 @@ int hash(char *name);
 int next_prime(int x);
 int is_prime(int x);
 
+char * get_name_of(int index);
+
 #endif

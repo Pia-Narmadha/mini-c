@@ -35,6 +35,8 @@ void printAsm();
 int registerAlloc(char *var,int scope);
 int memorySpill();
 int findRegister(char * var_name);
+
+void emit_comment(char *str);
 /*
 returns the register number if the variable is in the register else returns -1;
 var_name is the name of the varable 

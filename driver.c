@@ -30,9 +30,10 @@ int main() {
       printAst(ast, 1);
       printf("\n\tPrinting symbol table\n");
       print_ST(ST);
+      printf("\n\tGenerating assembly code\n");
       codegen(ast);
       printf("\nAssemble code is genereted");
-      //printAsm();
+      printAsm();
     }
     printf("\n");
   }

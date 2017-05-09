@@ -309,3 +309,8 @@ int is_prime(int x) {
    }
    return 1;
 }
+
+char * get_name_of(int index)
+{
+    return ST[index].name;
+}

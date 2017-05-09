@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "tree.h"
 #include "codegen.h"
+#include "symtab.h"
 
 
 FILE *fp;
@@ -26,10 +27,35 @@ void loopStm(node *n)
 {
 
 }
-void functionDecl(node *n)
+void functionDecl(node * fundecl)
 {
-    //do nothig for the first children which is formal decllist
-    codegen(n->children[1]);
+    int i, j;
+    // writing the function name as comment
+    char * str = get_name_of(fundecl->children[1]->val);
+    emit_comment(str);
+    node *n;
+    for (i = 0; i < n->numChildren; i++)
+    {
+        n=fundecl->children[i];
+        switch (n->nodeKind)
+        {
+            case FUNCALLEXPR:
+                functionCall(n);
+                break;
+            case EXPR:
+                expr(n);
+                break;
+            case ASGN:
+                assignmentStm(n);
+                break;
+            case WHILE_TYPE:
+                loopStm(n);
+                break;
+            case CONSTM:
+                conditionalStm(n);
+                break;
+        }
+    }
     //pop instruction;
     //emit jump fp;
     
@@ -37,36 +63,10 @@ void functionDecl(node *n)
 void functionCall(node *n)
 {
     int param = 0;
+    //do nothig for the first children which is formal decllist
 
 }
-void codegen(node *n)
-{
-    int i, j;
-    for (i = 0; i < n->numChildren; i++)
-        codegen(getChild(n, i));
-    switch (n->nodeKind)
-    {
-        case FUNDECL:
-            functionDecl(n);
-            //write instructions to pop the stack;
-        break;
-        case FUNCALLEXPR:
-            functionCall(n);
-        break;
-        case EXPR:
-            expr(n);
-        break;
-        case ASGN:
-            assignmentStm(n);
-        break;
-        case WHILE_TYPE:
-            loopStm(n);
-        break;
-        case CONSTM:
-            conditionalStm(n);
-        break;
-    }
-}
+
 void printAsm()
 {
     char c = fgetc(fp);
@@ -108,8 +108,41 @@ int findRegister(char * var_name)
     }
     return tmp;
 }
+
 int memorySpill()//store the local values in the stack in case of memory spill
 {   
     return -1;// not yet complete
+}
 
+void emit_comment(char *str)
+{
+    fprintf(fp,"\n#");
+    fprintf(fp,"%s",str);
+}
+
+
+
+void codegen(node *parent)
+{
+    int i, j;
+    node *n;
+    printf("codeg");
+    for (i = 0; i < parent->numChildren; i++)
+    {
+        
+        n=parent->children[i];printf("loop %d",i);
+        switch (n->nodeKind)
+        {
+            case FUNDECL:
+                 printf("\nfunction decl");
+                functionDecl(n);
+                //write instructions to pop the stack;
+                 break;
+            case VARDECL:
+                printf("\nglobal vardecl");
+                break;
+            default:
+            printf("no match");
+        }
+    }
 }
