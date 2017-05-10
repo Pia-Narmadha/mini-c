@@ -1,28 +1,29 @@
 #include"tree.h"
 #include<stdio.h>
 #include<stdlib.h>
-
+#include"symtab.h"
 enum dataType {INT_TYPE, CHAR_TYPE, VOID_TYPE, STRING_TYPE};
-
+enum operators {ADD, SUB, MUL, DIV, GT, LT, GTE, LTE, NEQ, EQ, ASSGN};
+char *oper[11] = {"+", "-", "*", "/", ">", "<", ">=", "<=", "!=", "==", "=" };
 char *types[4] = {
   "INT_TYPE", "CHAR_TYPE", "VOID_TYPE","STRING_TYPE"
 };
 
 /* string values for ast node types, makes tree output more readable */
 
-char *nodeNames[40] = {
+char *nodeNames[41] = {
   "program", "declList", "decl", "vardecl",
   "typeSpecfier",  
   "funDecl", "formalDeclList", "formalDecl", "funBody", "localDeclList", "localVarDecl", 
   "statementList", "statement", "compoundStmt", "assignStmt", "ASGN",
-  "condStmt", "IF_TYPE", "ELSE_TYPE", "loopStmt", "WHILE_TYPE", 
+  "condStmt", "IF_TYPE", "IF_ELSE_TYPE", "loopStmt", "WHILE_TYPE", 
   "returnStmt", "RETURN_TYPE", 
   "var", "identifier",
   "expression",
   "relop", 
   "addExpr", "addop", "ADD", "SUB",
   "term","mulop", "MUL", "DIV", 
-  "factor", "ARR", 
+  "factor", "integer", "ARR", 
   "funcCallExpr", "argList",
   "EMPTY"
 };
@@ -56,13 +57,30 @@ void addChild(tree *parent, tree *child) {
 
 void printAst(tree *node, int nestLevel) {
 
-  // if (nodeNames[node->nodeKind] == "typeSpecifier")
-  if (node->nodeKind == 4)
-    printf("%s ", types[node->val]);
+  switch(node->nodeKind) {
+  case 36:
+    printf("<%d>\n", node->val);
+    break;
+  case 4:
+    printf("<%s>\n", types[node->val]);
+    break;
+  case 27:
+    printf("<%s>\n", oper[node->oper]);
+    break;
+  case 31:
+    printf("<%s>\n", oper[node->oper]);
+    break;
+  case 24:
+    printf("<%s>\n", get_name_of(node->val));
+    break;
+  case 14:
+    printf("<%s>\n", oper[node->oper]);
+    break;
+  default:
+    printf("%s\n", nodeNames[node->nodeKind]);
+    break;
+  }
 
-  printf("%s\n", nodeNames[node->nodeKind]);
-  /*if(node->nodeKind == 25 )
-    printf("%s type:%d",nodeNames[node->nodeKind],node->val);*/
   int i, j;
 
   for (i = 0; i < node->numChildren; i++)  {

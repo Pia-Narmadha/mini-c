@@ -65,34 +65,20 @@ int expr(node *n)
             t1 = expr(getChild(n, 0));
             t2 = expr(getChild(n, 1));
             result = registerAlloc("result",1);
-            emit(n->val, t1, t2, 0,result);     
+            emit(n->oper, t1, t2, 0,result);     
         case INTEGER:
             result = registerAlloc("result",1);
             emit(4, n->val, 0, 0, result);
             break; 
         case IDENTIFIER:
             result = registerAlloc("result",1);
-            emit(5, n->val, 0, 0, result); 
-            break;
-        case ADDOP:
-            if(n->val == ADD)
-            {
-                    //addition
-            }
-            else
-            {
-                    //subraction
-            }
+            emit(5, get_name_of(n->val), 0, 0, result); 
             break;
         case MULOP:
-            if(n->val == MUL)
-            {
-                    //multiplition
-            }
-            else
-            {
-                    //divition
-            }
+            t1 = expr(getChild(n, 0));
+            t2 = expr(getChild(n, 1));
+            result = registerAlloc("result",1);
+            emit(n->oper, t1, t2, 0,result);
             break;
          case FUNCALLEXPR:
                 functionCall(n);
@@ -152,12 +138,13 @@ void loopStm(node *n)
 }
 void statement(node *tmp)
 {
-    switch (tmp->nodeKind)
+    printf("\n calling stmt %d, " );
+    switch (getChild(tmp->nodeKind))
         {
             case COMSTM://compound statement
                 break;
             case EXPR:
-                expr(tmp);
+                expr(getChild(tmp, 0));
                 break;
             case ASTM:
                 assignmentStm(tmp);
@@ -395,10 +382,21 @@ void emit_comment(char *str)
     fprintf(fp,"%s",str);
 }
 
-void codegen(node *parent)
+void initcodegen(node *p)
 {
-    int i=0, j;
-    node *n;
+    fp = fopen("assembly.asm", "w+");
+    fprintf(fp,"\n# assembly code");
+    fprintf(fp,"\n.text");
+    fprintf(fp,"\nmain");
+    codegen(p);
+
+    fclose(fp);
+}
+
+void codegen(node *n)
+{
+    int i=0;
+    /*node *n;
 
     fvl = (var_list *) malloc (sizeof ( struct var_list));
     fvl->next = NULL;
@@ -422,12 +420,27 @@ void codegen(node *parent)
         printf("loop %d",i);
         switch (n->nodeKind)
         {
-            case FUNDECL:
-                functionDecl(n);
+           // case FUNDECL:
+               // functionDecl(n);
+               // break;
+            case STM:
+                statement(n);
                 break;
         }
-    }
-    fclose(fp);
+    }*/
+
+    //printf("\n calling codegen ");
+    for (i = 0; i < n->numChildren; i++) 
+        codegen(getChild(n, i));
+        switch (n->nodeKind)
+        {
+          case FUNDECL:
+            //functionDecl(n);
+            break;
+          case STM:
+            statement(n);
+            break;
+         }
 }
 
 

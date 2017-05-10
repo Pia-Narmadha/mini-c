@@ -1,6 +1,6 @@
 GRAMMAR = parser.y
 
-CFLAGS = -I. -funsigned-char -g -DYYDEBUG 	
+CFLAGS = -I. -funsigned-char -g -DYYDEBUG -std=c99 	
 YFLAGS = -v -d
 
 mcc: y.tab.o lex.yy.o symtab.o tree.o driver.o semchk.o codegen.o

@@ -33,7 +33,7 @@ int main() {
       printf("\n\tGenerating assembly code\n");
       codegen(ast);
       printf("\nAssemble code is genereted and store in file assembly.asm\n");
-      //printAsm();
+     // printAsm();
     }
     printf("\n");
   }
