@@ -34,6 +34,4 @@ semchk.o: semchk.c
 	$(CC)  $(CFLAGS) -c semchk.c 
 
 clean:
-	rm -f y.tab.* y.output lex.yy.* *.o *~ mcc     
-
-
+	rm -f y.tab.* y.output lex.yy.* *.o *~ mcc 

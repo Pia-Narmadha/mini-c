@@ -66,10 +66,10 @@ int expr(node *n)
             t2 = expr(getChild(n, 1));
             result = registerAlloc("result",1);
             emit(n->val, t1, t2, 0,result);     
-        case INTEGER:
+        /*case INTEGER:
             result = registerAlloc("result",1);
             emit(4, n->val, 0, 0, result);
-            break; 
+            break; */
         case IDENTIFIER:
             result = registerAlloc("result",1);
             emit(5, n->val, 0, 0, result); 

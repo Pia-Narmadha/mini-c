@@ -37,6 +37,8 @@ symtab.c
 symtab.h 
 tree.c 
 tree.h 
+codegen.h
+codegen.c
 driver.c 
 
 ----------------------------------------------------
@@ -74,21 +76,22 @@ Handles both single line comment and multiline comment
 operator precedence is multipicative, additive , relational.
 basic data types are int, char, void
 variables can be array.
-
-
+Assuming that there are total of 20 registers
+memory spill has been handled using memory spill function
+function can have zero or one argument.
+only integer data type is permitted.
 ----------------------------------------------------
 Bug information
 ----------------------------------------------------
-cannot handle strings
-type check for non simple expressions are stated as warnings
-line numbers where error occurs are not displayed.
+
 
 ----------------------------------------------------
 Extra credit work
 ----------------------------------------------------
+memory spill has been handled
 
 ----------------------------------------------------
 Work done by
 ----------------------------------------------------
 Narmadha rajendran
-Amanda Hooge
+Arti Nagarajan
