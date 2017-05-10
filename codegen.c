@@ -58,10 +58,13 @@ int expr(node *n)
 {
     int result, t1, t2, i;
     char op;
-    printf("number of children = %d\n", n->val);
+   // printf("node Kind = %s\n", nodeNames[n->nodeKind]);
     switch(n->nodeKind)
     {
+        case ASTM:
+            t1 = expr(getChild(n, 1));
         case ADDEXPR:
+            printf(" calling ADDEXPR");
             t1 = expr(getChild(n, 0));
             t2 = expr(getChild(n, 1));
             result = registerAlloc("result",1);
@@ -138,8 +141,11 @@ void loopStm(node *n)
 }
 void statement(node *tmp)
 {
-    printf("\n calling stmt %d, " );
-    switch (getChild(tmp->nodeKind))
+    printf("\n calling stmt" );
+    printf("temp->nodeChideren%d=", tmp->numChildren);
+    tmp = getChild(tmp,0);
+    printf(" node kind inside stmt = %d", tmp->nodeKind);
+    switch (tmp->nodeKind)
         {
             case COMSTM://compound statement
                 break;
@@ -147,7 +153,8 @@ void statement(node *tmp)
                 expr(getChild(tmp, 0));
                 break;
             case ASTM:
-                assignmentStm(tmp);
+                printf("Calling ASTM\n");
+                expr(tmp);
                 break;
             case LSTM://loop statement
                 loopStm(tmp);
@@ -382,7 +389,7 @@ void emit_comment(char *str)
     fprintf(fp,"%s",str);
 }
 
-void initcodegen(node *p)
+/*void initcodegen(node *p)
 {
     fp = fopen("assembly.asm", "w+");
     fprintf(fp,"\n# assembly code");
@@ -392,11 +399,11 @@ void initcodegen(node *p)
 
     fclose(fp);
 }
-
-void codegen(node *n)
+*/
+void codegen(node *parent)
 {
     int i=0;
-    /*node *n;
+    node *n;
 
     fvl = (var_list *) malloc (sizeof ( struct var_list));
     fvl->next = NULL;
@@ -420,17 +427,14 @@ void codegen(node *n)
         printf("loop %d",i);
         switch (n->nodeKind)
         {
-           // case FUNDECL:
-               // functionDecl(n);
-               // break;
-            case STM:
-                statement(n);
+            case FUNDECL:
+                functionDecl(n);
                 break;
         }
-    }*/
+    }
 
     //printf("\n calling codegen ");
-    for (i = 0; i < n->numChildren; i++) 
+   /* for (i = 0; i < n->numChildren; i++) 
         codegen(getChild(n, i));
         switch (n->nodeKind)
         {
@@ -440,7 +444,7 @@ void codegen(node *n)
           case STM:
             statement(n);
             break;
-         }
+         }*/
 }
 
 
