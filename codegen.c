@@ -58,41 +58,35 @@ int expr(node *n)
 {
     int result, t1, t2, i;
     char op;
-    printf("number of children = %d\n", n->val);
+   // printf("node Kind = %s\n", nodeNames[n->nodeKind]);
     switch(n->nodeKind)
     {
+        case ASTM:
+            t1 = expr(getChild(n, 1));
         case ADDEXPR:
+            printf(" calling ADDEXPR");
             t1 = expr(getChild(n, 0));
             t2 = expr(getChild(n, 1));
             result = registerAlloc("result",1);
+
             emit(n->val, t1, t2, 0,result);     
         /*case INTEGER:
+
+            emit(n->oper, t1, t2, 0,result);     
+        case INTEGER:
+
             result = registerAlloc("result",1);
             emit(4, n->val, 0, 0, result);
             break; */
         case IDENTIFIER:
             result = registerAlloc("result",1);
-            emit(5, n->val, 0, 0, result); 
-            break;
-        case ADDOP:
-            if(n->val == ADD)
-            {
-                    //addition
-            }
-            else
-            {
-                    //subraction
-            }
+            emit(5, get_name_of(n->val), 0, 0, result); 
             break;
         case MULOP:
-            if(n->val == MUL)
-            {
-                    //multiplition
-            }
-            else
-            {
-                    //divition
-            }
+            t1 = expr(getChild(n, 0));
+            t2 = expr(getChild(n, 1));
+            result = registerAlloc("result",1);
+            emit(n->oper, t1, t2, 0,result);
             break;
          case FUNCALLEXPR:
                 functionCall(n);
@@ -152,15 +146,20 @@ void loopStm(node *n)
 }
 void statement(node *tmp)
 {
+    printf("\n calling stmt" );
+    printf("temp->nodeChideren%d=", tmp->numChildren);
+    tmp = getChild(tmp,0);
+    printf(" node kind inside stmt = %d", tmp->nodeKind);
     switch (tmp->nodeKind)
         {
             case COMSTM://compound statement
                 break;
             case EXPR:
-                expr(tmp);
+                expr(getChild(tmp, 0));
                 break;
             case ASTM:
-                assignmentStm(tmp);
+                printf("Calling ASTM\n");
+                expr(tmp);
                 break;
             case LSTM://loop statement
                 loopStm(tmp);
@@ -395,9 +394,20 @@ void emit_comment(char *str)
     fprintf(fp,"%s",str);
 }
 
+/*void initcodegen(node *p)
+{
+    fp = fopen("assembly.asm", "w+");
+    fprintf(fp,"\n# assembly code");
+    fprintf(fp,"\n.text");
+    fprintf(fp,"\nmain");
+    codegen(p);
+
+    fclose(fp);
+}
+*/
 void codegen(node *parent)
 {
-    int i=0, j;
+    int i=0;
     node *n;
 
     fvl = (var_list *) malloc (sizeof ( struct var_list));
@@ -427,7 +437,19 @@ void codegen(node *parent)
                 break;
         }
     }
-    fclose(fp);
+
+    //printf("\n calling codegen ");
+   /* for (i = 0; i < n->numChildren; i++) 
+        codegen(getChild(n, i));
+        switch (n->nodeKind)
+        {
+          case FUNDECL:
+            //functionDecl(n);
+            break;
+          case STM:
+            statement(n);
+            break;
+         }*/
 }
 
 
