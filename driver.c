@@ -32,8 +32,8 @@ int main() {
       print_ST(ST);
       printf("\n\tGenerating assembly code\n");
       codegen(ast);
-      printf("\nAssemble code is genereted");
-      printAsm();
+      printf("\nAssemble code is genereted and store in file assembly.asm\n");
+      //printAsm();
     }
     printf("\n");
   }
