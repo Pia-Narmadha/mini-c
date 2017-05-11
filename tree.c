@@ -11,7 +11,7 @@ char *types[4] = {
 
 /* string values for ast node types, makes tree output more readable */
 
-char *nodeNames[41] = {
+char *nodeNames[41+11] = {
   "program", "declList", "decl", "vardecl",
   "typeSpecfier",  
   "funDecl", "formalDeclList", "formalDecl", "funBody", "localDeclList", "localVarDecl", 
@@ -25,7 +25,8 @@ char *nodeNames[41] = {
   "term","mulop", "MUL", "DIV", 
   "factor", "integer", "ARR", 
   "funcCallExpr", "argList",
-  "EMPTY"
+  "EMPTY",
+    "ADD_OP", "SUB_OP","MUL_OP", "DIV_OP","LT_OP", "GT_OP", "GTE_OP", "LTE_OP", "EQ_OP", "NEQ_OP", "ASGN_OP"
 };
 
 tree *maketree(int kind) {

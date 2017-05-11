@@ -50,5 +50,6 @@ void typeChk(node *identifier, node *expr);
 int funSignChk(int index, node* node);
 int fundeclCheck(char *name);
 
-void insertInCallTable(int ,char*,node*);
+int insertInCallTable(int ,char*,node*);
+char * get_name_from_calltable(int index);
 #endif

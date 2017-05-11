@@ -3,6 +3,7 @@
 #include "codegen.h"
 #include "symtab.h"
 #include<string.h>
+#include "semchk.h"
 
 
 FILE *fp;
@@ -14,25 +15,25 @@ void emit(int opcode,int r1,int r2,int r3,int offset)//it creates the .asm file 
    //write code for printing 
    switch (opcode) {
    case 0:
-   fprintf(fp, "%s, $r%d, $r%d, $r%d\n",arith[opcode], offset, r1, r2);
+   fprintf(fp, "\n%s, $r%d, $r%d, $r%d",arith[opcode], offset, r1, r2);
    break;
    case 1:
-   fprintf(fp, "%s, $r%d, $r%d, $r%d\n",arith[opcode], offset, r1, r2);
+   fprintf(fp, "\n%s, $r%d, $r%d, $r%d",arith[opcode], offset, r1, r2);
    break;
    case 2:
-   fprintf(fp, "%s, $r%d, $r%d, $r%d\n",arith[opcode], offset, r1, r2);
+   fprintf(fp, "\n%s, $r%d, $r%d, $r%d",arith[opcode], offset, r1, r2);
    break;
    case 3:
-   fprintf(fp, "%s, $r%d, $r%d, $r%d\n",arith[opcode], offset, r1, r2);
+   fprintf(fp, "\n%s, $r%d, $r%d, $r%d",arith[opcode], offset, r1, r2);
    break;
    case 4:
-   fprintf(fp, "li, $r%d, %d\n", offset, r1);
+   fprintf(fp, "\nli, $r%d, %d", offset, r1);
    break;
    case 5:
-   fprintf(fp, "lw, $r%d, @%d\n", offset, r1);
+   fprintf(fp, "\nlw, $r%d, @%d", offset, r1);
    break;
    case 6:
-   fprintf(fp, "sw, $@%d, $r%d\n", offset, r2);  
+   fprintf(fp, "\nsw, $@%d, $r%d\n", offset, r2);  
    }
 
 }
@@ -42,7 +43,7 @@ int getLabel()
 }
 void assignmentStm(node *n)
 {
-    if(n->numChildren >2)
+    if(n->numChildren >1)
     {
         int r=registerAlloc(get_name_of(n->children[0]->val),1);
         int result=expr(getChild(n,2));
@@ -56,44 +57,111 @@ void assignmentStm(node *n)
 }
 int expr(node *n)
 {
-    int result, t1, t2, i;
+    int result, t1, t2, i,offset;
     char op;
+    char* str;
+    var_list *dummy = fvl;
+    if(n->nodeKind == EXPR)
+        n=getChild(n,0);
    // printf("node Kind = %s\n", nodeNames[n->nodeKind]);
     switch(n->nodeKind)
     {
-        case ASTM:
-            t1 = expr(getChild(n, 1));
-        case ADDEXPR:
-            printf(" calling ADDEXPR");
+        case ADD_OP:
+            t1 = expr(getChild(n, 0));
+            t2 = expr(getChild(n, 1));
+            result = registerAlloc("@",1);
+            emit_r3("add",result,t1,t2);
+            break;
+        case SUB_OP://subraction expression
+            t1 = expr(getChild(n, 0));
+            t2 = expr(getChild(n, 1));
+            result = registerAlloc("@",1);
+            emit_r3("sub",result,t1,t2);
+            //emit(n->val, t1, t2, 0,result); 
+            break;  
+        case MUL_OP:
             t1 = expr(getChild(n, 0));
             t2 = expr(getChild(n, 1));
             result = registerAlloc("result",1);
-
-            emit(n->val, t1, t2, 0,result);     
-        /*case INTEGER:
-
-            emit(n->oper, t1, t2, 0,result);     
-        case INTEGER:
-
+            //emit(n->oper, t1, t2, 0,result);
+            emit_r3("mul",result,t1,t2);
+            break;
+        case DIV_OP:
+            t1 = expr(getChild(n, 0));
+            t2 = expr(getChild(n, 1));
             result = registerAlloc("result",1);
-            emit(4, n->val, 0, 0, result);
-            break; */
+            emit_r3("div",result,t1,t2);
+            break;  
+        case LT_OP:
+            t1 = expr(getChild(n, 0));
+            t2 = expr(getChild(n, 1));
+            result = registerAlloc("result",1);
+            emit_r3("slt",result,t1,t2);
+            break;
+        case  GT_OP:
+            t1 = expr(getChild(n, 0));
+            t2 = expr(getChild(n, 1));
+            result = registerAlloc("result",1);
+            emit_r3("slt",result,t2,t1);
+            break;
+        case GTE_OP:
+            t1 = expr(getChild(n, 0));
+            t2 = expr(getChild(n, 1));
+            result = registerAlloc("result",1);
+            fprintf(fp,"\nsubi $%d,$%d,1",t2,t2);
+            emit_r3("slt",result,t2,t1);
+            break;
+        case LTE_OP:
+            t1 = expr(getChild(n, 0));
+            t2 = expr(getChild(n, 1));
+            result = registerAlloc("result",1);
+            fprintf(fp,"\nsubi $%d,$%d,1",t1,t1);
+            emit_r3("slt",result,t1,t2);
+            break;
+        case EQ_OP:
+            t1 = expr(getChild(n, 0));
+            t2 = expr(getChild(n, 1));
+            result = registerAlloc("result",1);
+            emit_r3("seq",result,t1,t2);
+            break;
+        case NEQ_OP:
+            t1 = expr(getChild(n, 0));
+            t2 = expr(getChild(n, 1));
+            result = registerAlloc("result",1);
+            emit_r3("sub",result,t1,t2);
+            fprintf(fp,"\nseq $%d,$%d,%d",result,result,0);
+            break;
         case IDENTIFIER:
-            result = registerAlloc("result",1);
-            emit(5, get_name_of(n->val), 0, 0, result); 
+            str = strdup(get_name_of(n->val));
+            result = findRegister(str);
+            if(result == -1)
+            {
+                printf("\nRun time error: Use of uninitialized variable %s\n",str);
+                exit(1);
+            }
+            offset =0;
+            if(result == -1)// memory spill has occured and the value of the var is stored in stack
+            {
+                result = registerAlloc(str,1);
+                while(dummy != NULL && strcmp(dummy->var_name,str) != 0)
+                {
+                    dummy = dummy ->next;
+                    offset++;
+                }
+                fprintf(fp,"\nlw $%d,%d($sp)",result,4*offset);
+                int value = 0;
+            }
+            break; 
+        case INTEGER:
+            result = registerAlloc("@",1);
+            emit_i("li",result,n->val);
             break;
-        case MULOP:
-            t1 = expr(getChild(n, 0));
-            t2 = expr(getChild(n, 1));
-            result = registerAlloc("result",1);
-            emit(n->oper, t1, t2, 0,result);
+        case FUNCALLEXPR:
+            result = functionCall(n);
             break;
-         case FUNCALLEXPR:
-                functionCall(n);
-                break;
+            
     } 
     return result;
-
 }
 void conditionalStm(node *n)
 {
@@ -147,19 +215,28 @@ void loopStm(node *n)
 void statement(node *tmp)
 {
     printf("\n calling stmt" );
-    printf("temp->nodeChideren%d=", tmp->numChildren);
-    tmp = getChild(tmp,0);
-    printf(" node kind inside stmt = %d", tmp->nodeKind);
+    node *c2,*dummy;
     switch (tmp->nodeKind)
         {
             case COMSTM://compound statement
+                c2 = getChild(tmp,0);
+                printf("begin compound statement");
+                while(c2->children[0]->nodeKind != EMPTY)// handling statement list
+                {
+                    printf("loop compound statement %d",c2->nodeKind);
+                    dummy=getChild(getChild(c2,0),0);
+                    c2 = getChild(c2,1);
+                    statement(dummy);
+                }
+                printf("end compound statement");
                 break;
             case EXPR:
                 expr(getChild(tmp, 0));
                 break;
             case ASTM:
                 printf("Calling ASTM\n");
-                expr(tmp);
+                assignmentStm(tmp);
+                //expr(tmp);
                 break;
             case LSTM://loop statement
                 loopStm(tmp);
@@ -171,20 +248,27 @@ void statement(node *tmp)
                 if(tmp->numChildren > 1)
                 {
                     int result = expr(getChild(tmp,1));
-                    fprintf(fp,"\nmv $25,$%d",result);
+                    fprintf(fp,"\nmove $25,$%d",result);
                 }
                 fprintf(fp,"\njr $ra");
+                break;
+            case STM:
+                statement(getChild(tmp,0));
                 break;
         }
 }
 void functionBody(node *funbody)
 {
     int i;
-    node *c1,*c2;
+    node *c1,*c2,*dummy;
     c1=getChild(funbody,0);
     c2=getChild(funbody,1);
-    while(c1->nodeKind != EMPTY)//handling local decllist
+    while(c1->children[0]->nodeKind != EMPTY)//c1->nodeKind != EMPTY)//handling local decllist
     {
+        dummy =getChild(c1,0);
+        printf("varname %s:",get_name_of(dummy->children[1]->val));
+        i=registerAlloc(get_name_of(dummy->children[1]->val),1);
+        c1=getChild(c1,1);
         // is ignored for time being, but should be later used to allocate space for stack;
     }
     while(c2->children[0]->nodeKind != EMPTY)// handling statement list
@@ -217,7 +301,10 @@ void functionDecl(node * fundecl)
         }
     }
     //call the function body code gen function
-    functionBody(getChild(fundecl,fundecl->numChildren-1));
+    if(fundecl->children[2]->nodeKind == FUNBODY)
+        functionBody(getChild(fundecl,2));
+    else
+        functionBody(getChild(fundecl,3));
 
     // placing the return value onto stack has been handled  
     
@@ -236,13 +323,17 @@ int functionCall(node *n)
 {
     int i=1,j=1;
     node *tmp = getChild(n,0);
-    char *str = get_name_of(tmp->val);
+    char *str = get_name_from_calltable(tmp->val);//get_name_of(tmp->val);
     char *name_list[20];
     //save the callers registers and empty the register array
     while(i<21)
     {
+        printf("\ni = %d",i);
         fprintf(fp,"\nsw $%d,%d($fp)",i,i*(-4));
-        name_list[i-1] = strdup(reg[i-1].var_name);
+        if(reg[i-1].var_name != NULL)
+            name_list[i-1] = strdup(reg[i-1].var_name);
+        else
+            name_list[i-1] = NULL;
         reg[i-1].var_name = NULL;
         i++;
     }
@@ -284,7 +375,8 @@ int functionCall(node *n)
     while(i<21)
     {
         fprintf(fp,"\nlw $%d,%d($fp)",i,i*(-4));
-        reg[i-1].var_name = strdup(name_list[i-1]);
+        if(name_list[i-1] != NULL)
+            reg[i-1].var_name = strdup(name_list[i-1]);
         i++;
     }
 
@@ -293,11 +385,10 @@ int functionCall(node *n)
     fprintf(fp,"\naddi $sp,$sp,%d",-4);
     
     //storing return valu in register 25
-    fprintf(fp,"lw $25,0($fp)");
+    fprintf(fp,"\nlw $25,0($fp)");
 
     return 25;
 }
-
 void printAsm()// not working
 {
     fp = fopen("assembly.asm", "r");
@@ -317,19 +408,21 @@ int registerAlloc(char *var,int scope)// return the next available register
     {
         if(reg[x].var_name == NULL)
         {
-            strcpy(reg[x].var_name,var);
+            reg[x].var_name=strdup(var);
             reg[x].sp=scope;
             return x;
         }
+        x++;
     }
     return memorySpill(var);
 }
 int findRegister(char * var_name)
 {
-    int x = 20;
+    int x = 0;
     int tmp = -1;
     while(x < 20)
     {
+        printf("%s == %s",reg[x].var_name,var_name);
         if(strcmp(reg[x].var_name,var_name) == 0)
         {
             if(reg[x].sp > 0)
@@ -337,6 +430,7 @@ int findRegister(char * var_name)
             else
                 tmp = x; // global value
         }
+        x++;
     }
     return tmp;
 }
@@ -373,16 +467,31 @@ int memorySpill(char *var)//store the local values in the stack in case of memor
     }
  // no register holding global value is found
         //storing the variable in the function variable list
-        element = (var_list *) malloc (sizeof ( struct var_list));
-        element->var_name = strdup(var);
-        element->next = fvl->next;
-        fvl->next = element;
 
-        // move variable to stack
-        emit_offset("sw",x,-4,"sp");
-        fprintf(fp,"\n addi $sp,$sp,-4");
+        //searching if the var has a space already allocated into stack
+        var_list *dummy = fvl;
+        int offset=0;
+        while(dummy && strcmp(dummy->var_name,var) != 0)
+        {
+            dummy = dummy->next;
+            offset++;
+        }
+        if(dummy != NULL)//space has already been allocated into stack
+        {
+            emit_offset("sw",x,-4*offset,"sp");
+        }
+        else
+        {
+            element = (var_list *) malloc (sizeof ( struct var_list));
+            element->var_name = strdup(var);
+            element->next = fvl->next;
+            fvl->next = element;
+            // move variable to stack
+            emit_offset("sw",x,-4,"sp");
+            fprintf(fp,"\n addi $sp,$sp,-4");
+        }
        
-       //returnig the register
+       //returning the register
         strcpy(reg[x].var_name,var);
         reg[x].sp=1;//scope is local
         return x;
@@ -420,14 +529,11 @@ void codegen(node *parent)
     fprintf(fp,"\n.text");
     fprintf(fp,"\nj main");
 
-    printf("num %d",parent->numChildren);
+    parent = getChild(parent,0);
+    //printf("num %d",parent->numChildren);
     while(i < parent->numChildren)
     {
         n = getChild(parent,i);
-        if(i==0)
-        {
-            parent = n;
-        }
         i++;
         printf("loop %d",i);
         switch (n->nodeKind)

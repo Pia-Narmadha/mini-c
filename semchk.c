@@ -5,8 +5,21 @@
 #include "symtab.h"
 #include<string.h>
 
-void insertInCallTable(int num ,char* name ,node* arg)
+char * get_name_from_calltable(int index)
 {
+    calltable *ptr=ct;
+    int i=0;
+    while(i < (index))
+    {
+      ptr=ptr->next;
+      i++;
+    }
+    return ptr->name;
+}
+
+int insertInCallTable(int num ,char* name ,node* arg)
+{
+  int i =0;
   calltable *ptr=ct;
   calltable *tmp=(calltable*) malloc(sizeof(struct calltable));
   tmp->line_no=num;
@@ -20,9 +33,11 @@ void insertInCallTable(int num ,char* name ,node* arg)
     while(ptr->next !=NULL)
     {
       ptr=ptr->next;
+      i++;
     }
     ptr->next=tmp;
   }
+  return ++i;
 }
 void idDeclChk(char *name,int index,int scope) //checks if the variable is declared or not
 {
@@ -98,7 +113,7 @@ int funSignChk(int index, node *node1)
       tmp=node1;
       while(tmp != NULL && sign !=NULL)//loop to traverse the sign list and the node
       {
-        if(strcmp(types[tmp->children[tmp->numChildren-1]->val],sign->type))
+        if(strcmp(types[tmp->children[tmp->numChildren-1]->type],sign->type))
         {
           count++;
           break;

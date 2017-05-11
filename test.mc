@@ -1,8 +1,10 @@
-void main1()
+int sum(int y)
+{
+  return y+1;
+}
+void main()
 {
   int x;
-  int a;
-  int b;
-  x= 17 * 2;
-
+  x=1;
+  sum(x);
 }

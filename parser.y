@@ -14,8 +14,8 @@
   int scope;
 
   enum dataType {INT_TYPE, CHAR_TYPE, VOID_TYPE, STRING_TYPE};
-  enum constType {INT, CHAR, x, STR};
-  enum opType {ADD_OP, SUB_OP, MUL_OP, DIV_OP,LT_OP, GT_OP, GTE_OP, LTE_OP, EQ_OP, NEQ_OP, ASGN_OP};
+  enum constType {INT, CHAR, STR};
+  //enum opType {ADD_OP, SUB_OP, MUL_OP, DIV_OP,LT_OP, GT_OP, GTE_OP, LTE_OP, EQ_OP, NEQ_OP, ASGN_OP};
 
   enum nodeTypes {
     PROGRAM, DECLLIST, DECL, VARDECL, 
@@ -31,7 +31,8 @@
     TERM, MULOP, MUL, DIV, 
     FACTOR,INTEGER,  ARR,
     FUNCALLEXPR, ARGL, 
-    EMPTY
+    EMPTY,
+    ADD_OP, SUB_OP, MUL_OP, DIV_OP,LT_OP, GT_OP, GTE_OP, LTE_OP, EQ_OP, NEQ_OP, ASGN_OP
   };
 
   
@@ -111,8 +112,27 @@ program         : declList
                     funCallMatch();
                   }
                 ;
-declList        : decl 
+declList        :decl
                   { 
+                    tree *declList = maketree(DECLLIST);
+                    addChild(declList, $1);
+                    $$=declList;
+                   
+                  }
+                |declList decl
+                  { 
+                    D(printf("\n\tdecllist"));
+                    $$ = $1;
+                    addChild($$, $2);
+                   
+                   
+                  }
+                ;
+
+/*declList        : decl 
+                  { 
+                    tree *progNode = maketree(PROGRAM);
+                    addChild(progNode, $1);
                     $$ = $1;
                    
                   }
@@ -122,7 +142,7 @@ declList        : decl
                     $$ = $1;
                     addChild($$, $2);
                    
-                  }
+                  }*/
                 ;
 decl            : varDecl
                   { 
@@ -194,16 +214,19 @@ typeSpecifier   : KWD_INT
                   { 
                     D(printf("\n\ttypeSpecifier_int"));
                     $$ = maketreeWithVal(TYPESPEC, INT_TYPE);
+                    $$->val=0;
                   }
                 | KWD_CHAR
                   { 
                     D(printf("\n\ttypeSpecifier_char"));
                     $$ = maketreeWithVal(TYPESPEC, CHAR_TYPE);
+                    $$->val=1;
                   }
                 | KWD_VOID
                   { 
                     D(printf("\n\ttypeSpecifier_void"));
                     $$ = maketreeWithVal(TYPESPEC, VOID_TYPE);
+                    $$->val=2;
                   }
                 ;
 funDecl         : typeSpecifier ID LPAREN formalDeclList RPAREN funBody 
@@ -257,6 +280,7 @@ formalDecl      : typeSpecifier ID
                     multiDeclIdChk(index);
                     addChild(formalDecl, maketreeWithVal(IDENTIFIER, index));
                     $$=formalDecl;
+                    $$->val=$1->val;
                   }
                 | typeSpecifier ID LSQ_BRKT RSQ_BRKT
                   { 
@@ -268,6 +292,7 @@ formalDecl      : typeSpecifier ID
                     D(printf("\nST insertion\n"));
                     addChild(formalDecl, maketreeWithVal(IDENTIFIER, index));
                     $$=formalDecl;
+                    $$->val=$1->val;
                   }
                 ;
 funBody         : LCRLY_BRKT localDeclList statementList RCRLY_BRKT
@@ -351,13 +376,13 @@ assignStmt      : var OPER_ASGN expression SEMICLN
                     D(printf("\n\t assignStmt"));
                     tree *assignStmt = maketree(ASTM);
                     addChild(assignStmt, $1);
-                    printf("$1->value = %d\n", $1->val);
+                    //printf("$1->value = %d\n", $1->val);
                     assignStmt->oper = ASGN_OP;
-                    //addChild(assignStmt, maketreeWithVal(ASGN, $2));
+                    addChild(assignStmt, maketreeWithVal(ASGN, $2));
                     addChild(assignStmt, $3);
                     if ($1->val != -1 ) 
                     {
-                      typeChk($1, getChild($3,0));
+                      //typeChk($1, getChild($3,0));
                     }
                     
                     $$=assignStmt;
@@ -371,19 +396,19 @@ assignStmt      : var OPER_ASGN expression SEMICLN
                 ;
 condStmt        : KWD_IF LPAREN expression RPAREN statement
                   { 
-                    tree *condStmt = maketree(IF_TYPE);
-                    //addChild(condStmt, maketreeWithVal(IF_TYPE, $1));
+                    tree *condStmt = maketree(CONSTM);
+                    addChild(condStmt, maketreeWithVal(IF_TYPE, $1));
                     addChild(condStmt, $3);
                     addChild(condStmt, $5);
                     $$=condStmt;
                   }
                 | KWD_IF LPAREN expression RPAREN statement KWD_ELSE statement
                   { 
-                    tree *condStmt = maketree(IF_ELSE_TYPE);
-                    //addChild(condStmt, maketreeWithVal(IF_TYPE, $1));
+                    tree *condStmt = maketree(CONSTM);
+                    addChild(condStmt, maketreeWithVal(IF_TYPE, $1));
                     addChild(condStmt, $3);
                     addChild(condStmt, $5);
-                    //addChild(condStmt, maketreeWithVal(ELSE_TYPE, $6));
+                    addChild(condStmt, maketreeWithVal(IF_ELSE_TYPE, $6));
                     addChild(condStmt, $7);
                     $$=condStmt;
                   }
@@ -461,19 +486,28 @@ expression      : addExpr
                 | expression relop addExpr
                   { 
                     tree *expression = maketree(EXPR);
+                    addChild(expression, $2);
+                    addChild($2, $1);
+                    tree *additional = maketree(EXPR);
+                    addChild($2, additional);
+                    addChild(additional,$3);
+                    
+                    $$=expression;
+                    $$->val = $2->val;
+                    /*tree *expression = maketree(EXPR);
                     addChild(expression, $1);
                     addChild(expression, $2);
                     addChild(expression, $3);
                     $$=expression;
-                    $$->val = $3->val;
+                    $$->val = $3->val;*/
                   }
                 ;
- relop          : OPER_LTE { $$ = maketreeWithVal(RELOP, LTE_OP); }
-                | OPER_LT { $$ = maketreeWithVal(RELOP, LT_OP); }
-                | OPER_GT { $$ = maketreeWithVal(RELOP, GT_OP); }
-                | OPER_GTE { $$ = maketreeWithVal(RELOP, GTE_OP); }
-                | OPER_EQ { $$ = maketreeWithVal(RELOP, EQ_OP); }
-                | OPER_NEQ { $$ = maketreeWithVal(RELOP, NEQ_OP); }
+ relop          : OPER_LTE { $$ = maketreeWithVal(LTE_OP, LTE_OP); }
+                | OPER_LT { $$ = maketreeWithVal(LT_OP, LT_OP); }
+                | OPER_GT { $$ = maketreeWithVal(GT_OP, GT_OP); }
+                | OPER_GTE { $$ = maketreeWithVal(GTE_OP, GTE_OP); }
+                | OPER_EQ { $$ = maketreeWithVal(EQ_OP, EQ_OP); }
+                | OPER_NEQ { $$ = maketreeWithVal(NEQ_OP, NEQ_OP); }
                 ;
 addExpr         : term
                  { 
@@ -483,21 +517,26 @@ addExpr         : term
                  }
                 | addExpr addop term
                  { 
-                    tree *addExpr = maketree(ADDEXPR);
+                    $$ = $2;
+                    addChild($$, $1);
+                    addChild($$, $3);
+                    $$->val = !($1->val==0 && $3->val==0)*-1;
+
+                    /*tree *addExpr = maketree(ADDEXPR);
                     printf("created ADDEXPR with oper $$ = %d\n", $2);
                     addChild(addExpr, $1);
                     //addChild(addExpr, $2);
                     addChild(addExpr, $3);
                     addExpr->oper = $2;
                     $$=addExpr;
-                    $$->val = !($1->val==0 && $3->val==0)*-1;
+                    $$->val = !($1->val==0 && $3->val==0)*-1;*/
                  }
                 ;
-addop           : OPER_ADD { //$$ = maketreeWithVal(ADDOP, ADD);
-                             $$ = ADD_OP;
+addop           : OPER_ADD { $$ = maketreeWithVal(ADD_OP, ADD);
+                             $$->oper = ADD_OP;
                            }
-                | OPER_SUB { //$$ = maketreeWithVal(ADDOP, SUB);
-                             $$ = SUB_OP;
+                | OPER_SUB { $$ = maketreeWithVal(SUB_OP, SUB);
+                             $$->oper = SUB_OP;
                            }
                 ;
 term            : factor
@@ -507,27 +546,32 @@ term            : factor
                   }
                 | term mulop factor
                   { 
-                    tree *term = maketree(TERM);
+                    $$ = $2;
+                    addChild($$, $1);
+                    addChild($$, $3);
+                    $$->val = !($1->val==0 && $3->val==0)*-1;
+
+                    /*tree *term = maketree(TERM);
                     addChild(term, $1);
                     //addChild(term, $2);
                     addChild(term, $3);
                     term->oper = $2;
                     $$=term;
-                    $$->val = !($1->val==0 && $3->val==0)*-1;
+                    $$->val = !($1->val==0 && $3->val==0)*-1;*/
                   }
                 ;
-mulop           : OPER_MUL { //$$ = maketreeWithVal(MULOP, MUL);
-                             $$ = MUL_OP;
+mulop           : OPER_MUL { $$ = maketreeWithVal(MUL_OP, MUL);
+                             $$->oper = MUL_OP;
                            }
-                | OPER_DIV { //$$ = maketreeWithVal(MULOP, DIV);
-                             $$ = DIV_OP;
+                | OPER_DIV { $$ = maketreeWithVal(DIV_OP, DIV);
+                             $$->oper = DIV_OP;
                            }
                 ;
 factor          : LPAREN expression RPAREN
                   { 
-                    tree *factor = maketree(FACTOR);
-                    addChild(factor, $2);
-                    $$=factor;
+                    //tree *factor = maketree(FACTOR);
+                    //addChild(factor, $2);
+                    $$=$2;//factor;
                     $$->val = $2->val;
                   }
                 | var
@@ -540,14 +584,14 @@ factor          : LPAREN expression RPAREN
                   }
                 | funcCallExpr
                   { 
-                    tree *factor = maketree(FACTOR);
-                    addChild(factor, $1);          
-                    $$=factor;
+                    //tree *factor = maketree(FACTOR);
+                    //addChild(factor, $1);          
+                    $$=$1;//factor;
                     $$->val = $1->val;
                   }
-                | INTCONST { $$ = maketreeWithVal(INTEGER, INT);$$->val= $1; }
-                | CHARCONST { $$ = maketreeWithVal(FACTOR, CHAR); $$->val = 1;}
-                | STRCONST { $$ = maketreeWithVal(FACTOR, STR); $$->val=2;}
+                | INTCONST { $$ = maketreeWithVal(INTEGER, INT);$$->val= $1; $$->type=0;}
+                | CHARCONST { $$ = maketreeWithVal(FACTOR, CHAR); $$->type = 1;}
+                | STRCONST { $$ = maketreeWithVal(FACTOR, STR); $$->type=2;}
                 ;
 funcCallExpr    : ID LPAREN argList RPAREN
                   { 
@@ -556,7 +600,7 @@ funcCallExpr    : ID LPAREN argList RPAREN
                     addChild(funcCallExpr, maketreeWithVal(IDENTIFIER, index));
                     addChild(funcCallExpr, $3);
                     $$=funcCallExpr; 
-                    insertInCallTable(yylineno,$1,$3);
+                    $$->val=insertInCallTable(yylineno,$1,$3);
                   }
                 | ID LPAREN RPAREN
                   { 
@@ -566,7 +610,7 @@ funcCallExpr    : ID LPAREN argList RPAREN
                     addChild(funcCallExpr, maketreeWithVal(IDENTIFIER, index));
                     $$=funcCallExpr;
 
-                    insertInCallTable(yylineno,$1,NULL);
+                    $$->val= insertInCallTable(yylineno,$1,NULL);
                   }
                 ;
 argList         : expression

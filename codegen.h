@@ -16,7 +16,8 @@ enum nodeTypes {
     TERM, MULOP, MUL, DIV, 
     FACTOR,INTEGER, ARR,
     FUNCALLEXPR, ARGL, 
-    EMPTY
+    EMPTY,
+    ADD_OP, SUB_OP, MUL_OP, DIV_OP,LT_OP, GT_OP, GTE_OP, LTE_OP, EQ_OP, NEQ_OP, ASGN_OP
   };
 struct registerArray
 {

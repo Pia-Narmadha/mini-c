@@ -52,11 +52,16 @@ void  add_function_signature_into_symtab(int index,int ret, tree *formalDL)//cal
     insert_function_signature(index,pos,-1);
   else
   {
-    insert_function_signature(index,pos,getChild(formalDL,0)->val);
+    while(formalDL)
+    {
+        insert_function_signature(index,pos,formalDL->val);
+        formalDL=getChild(formalDL,2);
+    }
+    /*insert_function_signature(index,pos,getChild(formalDL,0)->val);
     for (int i = 2; i < formalDL->numChildren; i++)
     {
       insert_function_signature(index,pos,getChild(getChild(formalDL,i),0)->val);
-    }
+    }*/
   }                    
 }
 void insert_function_signature(int index,int pos,int type)//called by add_function_signature function to insert a parammeter

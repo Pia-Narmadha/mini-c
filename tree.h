@@ -11,6 +11,8 @@ struct treenode {
   int numChildren;
   int val;
   int oper;
+  int type;
+  char *str;
   tree *parent;
   tree *children[MAXCHILDREN];
 };
