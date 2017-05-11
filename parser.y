@@ -599,18 +599,20 @@ funcCallExpr    : ID LPAREN argList RPAREN
                     tree *funcCallExpr = maketree(FUNCALLEXPR);
                     addChild(funcCallExpr, maketreeWithVal(IDENTIFIER, index));
                     addChild(funcCallExpr, $3);
-                    $$=funcCallExpr; 
-                    $$->val=insertInCallTable(yylineno,$1,$3);
+                    $$=funcCallExpr;
+                    $$->str = $1; 
+                    insertInCallTable(yylineno,$1,$3);
                   }
                 | ID LPAREN RPAREN
                   { 
-                    tree *funcCallExpr = maketree(FUNCALLEXPR);
+                   tree *funcCallExpr = maketree(FUNCALLEXPR);
                     int index;
 
                     addChild(funcCallExpr, maketreeWithVal(IDENTIFIER, index));
                     $$=funcCallExpr;
-
-                    $$->val= insertInCallTable(yylineno,$1,NULL);
+                    $$->str = $1; 
+                    
+                    insertInCallTable(yylineno,$1,NULL);
                   }
                 ;
 argList         : expression

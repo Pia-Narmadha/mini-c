@@ -1,0 +1,70 @@
+
+# assembly code
+.text
+j main
+#sum
+sum:addi $sp,$sp,-100
+li $1,1
+add $2,$0,$1
+move $25,$2
+jr $ra
+jr $ra
+#main
+main:addi $sp,$sp,-100
+li $4,1
+move $3,$4
+sw $1,-4($fp)
+sw $2,-8($fp)
+sw $3,-12($fp)
+sw $4,-16($fp)
+sw $5,-20($fp)
+sw $6,-24($fp)
+sw $7,-28($fp)
+sw $8,-32($fp)
+sw $9,-36($fp)
+sw $10,-40($fp)
+sw $11,-44($fp)
+sw $12,-48($fp)
+sw $13,-52($fp)
+sw $14,-56($fp)
+sw $15,-60($fp)
+sw $16,-64($fp)
+sw $17,-68($fp)
+sw $18,-72($fp)
+sw $19,-76($fp)
+sw $20,-80($fp)
+sw $ra,-84($fp)
+sw $fp,-88($fp)
+li $0,10
+li $1,0
+li $1,10
+li $2,1
+addi $sp,$sp,-84
+jal sum
+lw $fp,-4($sp)
+lw $ra,-8($sp)
+addi $sp,$sp,-12
+lw $1,-4($fp)
+lw $2,-8($fp)
+lw $3,-12($fp)
+lw $4,-16($fp)
+lw $5,-20($fp)
+lw $6,-24($fp)
+lw $7,-28($fp)
+lw $8,-32($fp)
+lw $9,-36($fp)
+lw $10,-40($fp)
+lw $11,-44($fp)
+lw $12,-48($fp)
+lw $13,-52($fp)
+lw $14,-56($fp)
+lw $15,-60($fp)
+lw $16,-64($fp)
+lw $17,-68($fp)
+lw $18,-72($fp)
+lw $19,-76($fp)
+lw $20,-80($fp)
+move $sp,$fp
+addi $sp,$sp,-4
+li $v0,10
+syscall

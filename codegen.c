@@ -45,7 +45,9 @@ void assignmentStm(node *n)
 {
     if(n->numChildren >1)
     {
-        int r=registerAlloc(get_name_of(n->children[0]->val),1);
+        int r=findRegister(get_name_of(n->children[0]->val));
+        if(r==-1)
+            r=registerAlloc(get_name_of(n->children[0]->val),1);
         int result=expr(getChild(n,2));
 
         fprintf(fp,"\nmove $%d,$%d",r,result);
@@ -60,10 +62,9 @@ int expr(node *n)
     int result, t1, t2, i,offset;
     char op;
     char* str;
-    var_list *dummy = fvl;
+    var_list *dummy = fvl->next;
     if(n->nodeKind == EXPR)
         n=getChild(n,0);
-   // printf("node Kind = %s\n", nodeNames[n->nodeKind]);
     switch(n->nodeKind)
     {
         case ADD_OP:
@@ -134,11 +135,6 @@ int expr(node *n)
         case IDENTIFIER:
             str = strdup(get_name_of(n->val));
             result = findRegister(str);
-            if(result == -1)
-            {
-                printf("\nRun time error: Use of uninitialized variable %s\n",str);
-                exit(1);
-            }
             offset =0;
             if(result == -1)// memory spill has occured and the value of the var is stored in stack
             {
@@ -147,6 +143,11 @@ int expr(node *n)
                 {
                     dummy = dummy ->next;
                     offset++;
+                }
+                if(dummy == NULL)
+                {
+                        printf("\nRun time error: Use of uninitialized variable %s\n",str);
+                        exit(1);
                 }
                 fprintf(fp,"\nlw $%d,%d($sp)",result,4*offset);
                 int value = 0;
@@ -214,27 +215,22 @@ void loopStm(node *n)
 }
 void statement(node *tmp)
 {
-    printf("\n calling stmt" );
     node *c2,*dummy;
     switch (tmp->nodeKind)
         {
             case COMSTM://compound statement
                 c2 = getChild(tmp,0);
-                printf("begin compound statement");
                 while(c2->children[0]->nodeKind != EMPTY)// handling statement list
                 {
-                    printf("loop compound statement %d",c2->nodeKind);
                     dummy=getChild(getChild(c2,0),0);
                     c2 = getChild(c2,1);
                     statement(dummy);
                 }
-                printf("end compound statement");
                 break;
             case EXPR:
                 expr(getChild(tmp, 0));
                 break;
             case ASTM:
-                printf("Calling ASTM\n");
                 assignmentStm(tmp);
                 //expr(tmp);
                 break;
@@ -244,7 +240,7 @@ void statement(node *tmp)
             case CONSTM://conditional statement
                 conditionalStm(tmp);
                 break;
-            case RSTM://conditional statement
+            case RSTM://return statement
                 if(tmp->numChildren > 1)
                 {
                     int result = expr(getChild(tmp,1));
@@ -263,13 +259,11 @@ void functionBody(node *funbody)
     node *c1,*c2,*dummy;
     c1=getChild(funbody,0);
     c2=getChild(funbody,1);
-    while(c1->children[0]->nodeKind != EMPTY)//c1->nodeKind != EMPTY)//handling local decllist
+    while(c1->children[0]->nodeKind != EMPTY)
     {
         dummy =getChild(c1,0);
-        printf("varname %s:",get_name_of(dummy->children[1]->val));
         i=registerAlloc(get_name_of(dummy->children[1]->val),1);
         c1=getChild(c1,1);
-        // is ignored for time being, but should be later used to allocate space for stack;
     }
     while(c2->children[0]->nodeKind != EMPTY)// handling statement list
     {
@@ -288,16 +282,16 @@ void functionDecl(node * fundecl)
     fprintf(fp,"addi $sp,$sp,-100");//setting stack space for the function
     
     //setting the registers
-    if(fundecl->numChildren > 2 && fundecl->children[2]->nodeKind == FORMALDL)
+    if(fundecl->numChildren > 2 && fundecl->children[2]->nodeKind == FORMALDECL)
     {
-        node *tmp1=getChild(fundecl,2);
+        node *tmp1 = getChild(fundecl,2);
         int i=0;
-        while(tmp1->numChildren == 2)
+        while(tmp1!=NULL)
         {
-            node *tmp2 = getChild(getChild(tmp1,0),1);
+            node *tmp2 = getChild(tmp1,1);
             char *str = get_name_of(tmp2->val);
             registerAlloc(str,1);
-            tmp1 = getChild(tmp1,1);
+            tmp1 = getChild(tmp1,2);
         }
     }
     //call the function body code gen function
@@ -323,12 +317,28 @@ int functionCall(node *n)
 {
     int i=1,j=1;
     node *tmp = getChild(n,0);
-    char *str = get_name_from_calltable(tmp->val);//get_name_of(tmp->val);
+    char *str = n->str;
     char *name_list[20];
+    var_list *own_list,*fvl_ptr,*tmp_ptr;
+    fvl_ptr=fvl;
+    while(fvl_ptr !=NULL)
+    {
+        
+        tmp_ptr = (var_list *) malloc(sizeof(struct var_list));
+        tmp_ptr->var_name = fvl_ptr->var_name;
+        tmp_ptr->next = fvl->next;
+        if(i==1)
+        {
+            own_list = tmp_ptr;
+        }
+        fvl_ptr=fvl_ptr->next;___POSIX_C_DEPRECATED_STARTING_200112L
+    }
+    i=1;
+
+    
     //save the callers registers and empty the register array
     while(i<21)
     {
-        printf("\ni = %d",i);
         fprintf(fp,"\nsw $%d,%d($fp)",i,i*(-4));
         if(reg[i-1].var_name != NULL)
             name_list[i-1] = strdup(reg[i-1].var_name);
@@ -340,6 +350,7 @@ int functionCall(node *n)
     fprintf(fp,"\nsw $ra,%d($fp)",i*(-4));//storing the return address register into stack;
     i++;
     fprintf(fp,"\nsw $fp,%d($fp)",i*(-4));//storing fp into stack;
+    
     //load the actual parameters into register
     if(n->numChildren > 1)
     {
@@ -364,6 +375,7 @@ int functionCall(node *n)
    //return address is managed using the register $ra
     
     //jump to function label
+    
     fprintf(fp,"\njal %s",str);
     
     //restore callers register
@@ -380,12 +392,21 @@ int functionCall(node *n)
         i++;
     }
 
+    //storing return value in register 25
+    //fprintf(fp,"\nlw $25,0($fp)");
+
     //removing the allocated space
     fprintf(fp,"\nmove $sp,$fp");
     fprintf(fp,"\naddi $sp,$sp,%d",-4);
     
-    //storing return valu in register 25
-    fprintf(fp,"\nlw $25,0($fp)");
+    while(own_list !=NULL)
+    {
+        
+        fvl = (var_list *) malloc(sizeof(struct var_list));
+        fvl->var_name = own_list->var_name;
+        fvl->next = own_list->next;
+        own_list = own_list -> next;
+    }
 
     return 25;
 }
@@ -422,8 +443,7 @@ int findRegister(char * var_name)
     int tmp = -1;
     while(x < 20)
     {
-        printf("%s == %s",reg[x].var_name,var_name);
-        if(strcmp(reg[x].var_name,var_name) == 0)
+        if(reg[x].var_name != NULL && strcmp(reg[x].var_name,var_name) == 0)
         {
             if(reg[x].sp > 0)
                 return x;// local value is given higher priority
@@ -503,22 +523,10 @@ void emit_comment(char *str)
     fprintf(fp,"%s",str);
 }
 
-/*void initcodegen(node *p)
-{
-    fp = fopen("assembly.asm", "w+");
-    fprintf(fp,"\n# assembly code");
-    fprintf(fp,"\n.text");
-    fprintf(fp,"\nmain");
-    codegen(p);
-
-    fclose(fp);
-}
-*/
 void codegen(node *parent)
 {
     int i=0;
     node *n;
-
     fvl = (var_list *) malloc (sizeof ( struct var_list));
     fvl->next = NULL;
     gvl = (var_list *) malloc (sizeof ( struct var_list));
@@ -530,12 +538,10 @@ void codegen(node *parent)
     fprintf(fp,"\nj main");
 
     parent = getChild(parent,0);
-    //printf("num %d",parent->numChildren);
     while(i < parent->numChildren)
     {
         n = getChild(parent,i);
         i++;
-        printf("loop %d",i);
         switch (n->nodeKind)
         {
             case FUNDECL:
@@ -543,19 +549,6 @@ void codegen(node *parent)
                 break;
         }
     }
-
-    //printf("\n calling codegen ");
-   /* for (i = 0; i < n->numChildren; i++) 
-        codegen(getChild(n, i));
-        switch (n->nodeKind)
-        {
-          case FUNDECL:
-            //functionDecl(n);
-            break;
-          case STM:
-            statement(n);
-            break;
-         }*/
 }
 
 

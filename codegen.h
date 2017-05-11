@@ -33,7 +33,7 @@ typedef struct var_list var_list;
 var_list *gvl,*fvl;//global one and is temp
 
 int label;
-
+int store_actual_value;
 void assignmentStm(node *n);
 int expr(node *n);
 void conditionalStm(node *n);
@@ -48,6 +48,7 @@ int findRegister(char * var_name);
 void functionBody(node *funbody);
 void statement(node *tmp);
 int getLabel();
+void initialize();
 
 void emit(int opcode,int r1,int r2,int r3,int offset);
 void emit_comment(char *str);

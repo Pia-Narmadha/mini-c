@@ -6,5 +6,5 @@ void main()
 {
   int x;
   x=1;
-  sum(x);
+  sum(10);
 }
